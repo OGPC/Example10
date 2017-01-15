@@ -83,11 +83,13 @@ public class Car : MonoBehaviour {
 			PlaceWheelChildren(wheel, wheel.transform.GetChild(0));
 
 			// Applies normal analog brakes if appropriate.  This is like the brake pedal on a normal car.
-			wheel.brakeTorque = Mathf.Lerp(0f, brakeTorque, brakePos);
+			//wheel.brakeTorque = Mathf.Lerp(0f, brakeTorque, brakePos);
 
 			// Applies the handbrake if appropriate
 			if (handbrakePos)
 				wheel.brakeTorque = handbrakeTorque;
+			else
+				wheel.brakeTorque = 0f;
 
 			// If using 4-wheel drive, the back wheels need torque as well
 			if (allWheelDrive)
@@ -105,5 +107,8 @@ public class Car : MonoBehaviour {
 			wheel.transform.GetChild(0).position = hit.point + wheel.transform.up * wheel.radius;
 		else // Wheel too far from ground.  Place objects at the end of the suspension range instead.
 			wheel.transform.GetChild(0).position = wheel.transform.position - (wheel.transform.up * wheel.suspensionDistance);
+
+		// Rotate the wheel model
+		model.Rotate(0f, 0f, wheel.rpm / 6f, Space.Self);
 	}
 }
