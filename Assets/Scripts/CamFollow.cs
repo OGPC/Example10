@@ -16,10 +16,10 @@ public class CamFollow : MonoBehaviour {
 		transform.position = Vector3.Lerp(transform.position, follow.position, transStrength);
 
 		// Define a vector that you want the camera to roughly point along. It's made by combining the
-		// forward direction and the way it's traveling, but velocity should anly matter to a point.
-		Vector3 camForward = follow.forward + Vector3.ClampMagnitude(follow.GetComponent<Rigidbody>().velocity, 3f);
+		// forward direction and the way it's traveling, but velocity should only matter to a point.
+		Vector3 camForward = follow.forward + (Vector3.ClampMagnitude(follow.GetComponent<Rigidbody>().velocity, 10f));
 
-		// Do a ton of vector and matrix math to pic the direction to look in. If you really want details, contact OGPC I guess.
+		// Do a ton of vector and matrix math to pick the direction to look in. If you really want details, contact OGPC I guess.
 		Quaternion targetRotation = Quaternion.LookRotation(Vector3.Cross(Vector3.Cross(follow.position, camForward), follow.position), follow.position);
 
 		// Rotate the camera to the desired rotation by a certain percentage (rotStrength).

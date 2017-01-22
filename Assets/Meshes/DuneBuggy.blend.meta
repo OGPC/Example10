@@ -39,6 +39,8 @@ ModelImporter:
     100062: RearSidePanels
     100064: Rocket
     100066: Tubes
+    100068: BuggyCollisionMain
+    100070: BuggyCollisionSide
     400000: Axle
     400002: Body_001
     400004: Body_002
@@ -73,6 +75,8 @@ ModelImporter:
     400062: RearSidePanels
     400064: Rocket
     400066: Tubes
+    400068: BuggyCollisionMain
+    400070: BuggyCollisionSide
     2300000: Axle
     2300002: Body_001
     2300004: Body_002
@@ -106,6 +110,8 @@ ModelImporter:
     2300060: RearSidePanels
     2300062: Rocket
     2300064: Tubes
+    2300066: BuggyCollisionMain
+    2300068: BuggyCollisionSide
     3300000: Axle
     3300002: Body_001
     3300004: Body_002
@@ -139,6 +145,8 @@ ModelImporter:
     3300060: RearSidePanels
     3300062: Rocket
     3300064: Tubes
+    3300066: BuggyCollisionMain
+    3300068: BuggyCollisionSide
     4300000: RearRightConnector
     4300002: NurbsCurve_009
     4300004: NurbsCurve_008
@@ -172,10 +180,12 @@ ModelImporter:
     4300060: RearLeftTire
     4300062: FrontLeftTire
     4300064: FrontRightTire
+    4300066: BuggyCollisionSide
+    4300068: BuggyCollisionMain
     7400000: Default Take
     9500000: //RootNode
   materials:
-    importMaterials: 0
+    importMaterials: 1
     materialName: 0
     materialSearch: 1
   animations:
@@ -214,8 +224,8 @@ ModelImporter:
     secondaryUVPackMargin: 4
     useFileScale: 1
   tangentSpace:
-    normalSmoothAngle: 60
-    normalImportMode: 0
+    normalSmoothAngle: 70
+    normalImportMode: 1
     tangentImportMode: 3
   importAnimation: 0
   copyAvatar: 0

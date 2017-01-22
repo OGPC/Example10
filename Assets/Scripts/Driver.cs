@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Car))]
 public class Driver : MonoBehaviour {
@@ -8,6 +9,8 @@ public class Driver : MonoBehaviour {
 	[SerializeField] private float throttle;
 	[SerializeField] private float steering;
 	[SerializeField] private bool handbrake;
+
+	public float brakesCutoffVelocity = 3f;
 
 	void Start() {
 		// This is safe without checking for success because of line 3.
@@ -27,22 +30,31 @@ public class Driver : MonoBehaviour {
 		car.handbrakePos = handbrake;
 		
 		// Behavior changes depending on car speed
-//		if (car.speed > 0f) { // driving forward
+		if (car.speed > brakesCutoffVelocity) {
+			// Driving/braking forward
 			if (throttle >= 0f) {
 				car.throttlePos = throttle;
 				car.brakePos = 0f;
 			} else {
-				car.brakePos = Mathf.Abs(throttle);
+				car.brakePos = -throttle;
 				car.throttlePos = 0f;
 			}
-/*		} else { // driving backward
+		} else if (car.speed < -brakesCutoffVelocity) {
+			// Driving/braking backward
 			if (throttle <= 0f) {
 				car.throttlePos = throttle;
 				car.brakePos = 0f;
 			} else {
-				car.brakePos = Mathf.Abs(throttle);
+				car.brakePos = throttle;
 				car.throttlePos = 0f;
 			}
-		}*/
+		} else {
+			// Slow driving with no brakes
+			car.throttlePos = throttle;
+			car.brakePos = 0f;
+		}
+
+		if (Input.GetKeyUp(KeyCode.Escape))
+			SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 	}
 }
