@@ -4,6 +4,10 @@
 public class Car : MonoBehaviour {
 
 	public float gravity = 20f;
+
+	public float positionSaveDelay = 5f;
+	float positionSaveTimer;
+	Vector3[] savedPosition = {Vector3.zero, Vector3.zero};
 	
 	public float throttlePos = 0f;
 	public float brakePos = 0f;
@@ -32,6 +36,10 @@ public class Car : MonoBehaviour {
 	[HideInInspector] public float speed;
 
 	void Start () {
+		positionSaveTimer = 0f;
+		savedPosition[0] = transform.position;
+		savedPosition[1] = transform.position;
+
 		// This is safe without checking for success because of line 3.
 		RB = GetComponent<Rigidbody>();
 
@@ -55,15 +63,21 @@ public class Car : MonoBehaviour {
 	}
 
 	void Update () {
-		if (Input.GetKeyDown(KeyCode.F)) {
-			lightsOn = !lightsOn;
-			foreach (GameObject o in lights) {
-				o.SetActive(lightsOn);
-			}
+		
+		if (Vector3.Dot(UnityEngine.RenderSettings.sun.transform.forward, transform.position.normalized) > 0f) {
+			lightsOn = true;
+		} else {
+			lightsOn = false;
 		}
+
+		foreach (GameObject o in lights) {
+			o.GetComponent<Light>().intensity = Mathf.Lerp(o.GetComponent<Light>().intensity, lightsOn?3f:0f, 0.1f);
+		}
+	
 	}
 
 	void FixedUpdate () {
+
 		// Makes sure input values are within acceptable ranges.
 		steerTarget = Mathf.Clamp(steerTarget, -1f, 1f);
 		throttlePos = Mathf.Clamp(throttlePos, -1f, 1f);
@@ -169,5 +183,37 @@ public class Car : MonoBehaviour {
 	void UnFlip () {
 		RB.velocity = transform.position.normalized * 10f;
 		RB.angularVelocity = transform.forward * 3f;
+	}
+
+	void OnTriggerEnter (Collider coll) {
+		if (coll.tag == "Respawn") {
+			Respawn();
+		}
+	}
+
+	void OnTriggerStay (Collider coll) {
+		if (coll.tag == "Ground") {
+			positionSaveTimer -= Time.fixedDeltaTime;
+			if (positionSaveTimer < 0f) {
+				positionSaveTimer = positionSaveDelay;
+				savedPosition[1] = savedPosition[0];
+				savedPosition[0] = transform.position;
+			}
+		}
+	}
+
+	public void Respawn() {
+		if (positionSaveTimer > positionSaveDelay) { // If you respawned recently already
+			positionSaveTimer = positionSaveDelay * 2f;
+			transform.position = savedPosition[1] + (savedPosition[1].normalized * 2f);
+			transform.LookAt(-(savedPosition[0]-savedPosition[1]), savedPosition[1].normalized);
+		} else {
+			positionSaveTimer = positionSaveDelay * 2f;
+			transform.position = savedPosition[0] + (savedPosition[0].normalized * 2f);
+			transform.LookAt(savedPosition[1], savedPosition[0].normalized);
+		}
+
+		RB.velocity = Vector3.zero;
+		RB.angularVelocity = Vector3.zero;
 	}
 }

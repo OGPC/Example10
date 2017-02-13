@@ -6,9 +6,9 @@ public class Driver : MonoBehaviour {
 	[HideInInspector] public Car car;
 
 	public bool allowInput = true;
-	[SerializeField] private float throttle;
-	[SerializeField] private float steering;
-	[SerializeField] private bool handbrake;
+	public float throttle;
+	public float steering;
+	public bool handbrake;
 
 	public float brakesCutoffVelocity = 3f;
 
