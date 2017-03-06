@@ -12,8 +12,10 @@ public class Pickup : MonoBehaviour {
 	float initLum;
 	Light pointLight;
 	float animTime = 0f;
+	AudioSource AS;
 
 	void Start () {
+		AS = GetComponent<AudioSource>();
 		initScale = transform.GetChild(0).localScale;
 		pointLight = transform.GetChild(0).GetChild(0).GetComponent<Light>();
 		initLum = pointLight.intensity;
@@ -21,6 +23,7 @@ public class Pickup : MonoBehaviour {
 
 	void OnTriggerEnter (Collider other) {
 		if (!pickedUp && other.tag == "Player") {
+			AS.PlayOneShot(AS.clip);
 			pickedUp = true;
 			if (manager != null)
 				manager.GetPickup(this.gameObject);
@@ -38,7 +41,7 @@ public class Pickup : MonoBehaviour {
 			pointLight.intensity = initLum * (1f - animTime);
 		}
 
-		if (animTime > 1f)
+		if (animTime > 1f && !AS.isPlaying)
 			Destroy(this.gameObject);
 	}
 }
