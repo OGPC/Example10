@@ -19,30 +19,40 @@ public class MoviePlayer : MonoBehaviour {
 	private int vsyncprevious;
 
 	void Update () {
-		if (playingMovie && !movTexture[movieSelected].tex.isPlaying) {
-			movTexture[movieSelected].endAction.Invoke();
-			StopMovie(movieSelected);
+		if (playingMovie) {
+
+			if (Input.anyKeyDown)
+				StopMovie();
+
+			if (!movTexture[movieSelected].tex.isPlaying) {
+				movTexture[movieSelected].endAction.Invoke();
+				StopMovie();
+			}
 		}
 	}
 
-	public void PlayMovie (int index) {
-		movieSelected = index;
+	public void PlayMovie (int index = -1) {
+		if (index != -1)
+			movieSelected = index;
+
 		vsyncprevious = QualitySettings.vSyncCount;
 		QualitySettings.vSyncCount = 0;
-		Time.captureFramerate = 30;
-		movTexture[index].tex.Play();
-		movTexture[index].go.SetActive(true);
+		//Time.captureFramerate = 60;
+		movTexture[movieSelected].tex.Play();
+		movTexture[movieSelected].go.SetActive(true);
 		videoParent.SetActive(true);
 		playingMovie = true;
 	}
 
-	public void StopMovie (int index) {
-		movieSelected = index;
-		movTexture[index].tex.Stop();
+	public void StopMovie (int index = -1) {
+		if (index != -1)
+			movieSelected = index;
+
+		movTexture[movieSelected].tex.Stop();
 		QualitySettings.vSyncCount = vsyncprevious;
 		Time.captureFramerate = 0;
-		movTexture[index].go.SetActive(false);
-		if (movTexture[index].closeAfter) {
+		movTexture[movieSelected].go.SetActive(false);
+		if (movTexture[movieSelected].closeAfter) {
 			videoParent.SetActive(false);
 		}
 		playingMovie = false;
