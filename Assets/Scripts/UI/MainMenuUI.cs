@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.Audio;
 
 [RequireComponent(typeof(AudioSource))]
 public class MainMenuUI : MonoBehaviour {
 
 	public Transform[] subMenuParents;
+	public AudioMixer mixer;
 	public float scrollAmount = 150f;
 	public float lerpConst = 5f;
 	public int currentMenu;
@@ -46,19 +47,35 @@ public class MainMenuUI : MonoBehaviour {
 		subMenuParents[currentMenu].localPosition = Vector3.right * 2000f;
 	}
 
-	public void Graphics (bool increase) {
+	public void Graphics (int change) {
 		sound.Play();
 
-		if (increase)
+		if (change == 1)
 			QualitySettings.IncreaseLevel(true);
-		else
+		else if (change == -1)
 			QualitySettings.DecreaseLevel(true);
 	}
 
-	public void AudioToggle () {
-		sound.Play();
-		Debug.Log("Audio toggled");
+	public void Audio (int mixerGroup) {
+		// Music is 1, SFX is 2.
+
+		string paramName = mixerGroup.ToString();
+		float currentVol;
+
+		if (mixer.GetFloat(paramName, out currentVol)){
+			
+			float newVol;
+			if (currentVol == 0f)
+				newVol = -80f;
+			else
+				newVol = 0f;
+
+			mixer.SetFloat(paramName, newVol);
+			PlayerPrefs.SetFloat("audio"+paramName, newVol);
+		} else
+			Debug.LogError("Mixer parameter \"" + paramName + "\" not set!");
 		
+		sound.Play();
 	}
 
 	public void LogoClick (int dialogMenu) {
