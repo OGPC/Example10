@@ -11,7 +11,7 @@ public class Car : MonoBehaviour {
 	
 	public float throttlePos = 0f;
 	public float brakePos = 0f;
-	public bool handbrakePos = false;
+	public bool boostPos = false;
 	public float steerTarget = 0f;
 	private float steerPos = 0f;
 
@@ -26,9 +26,11 @@ public class Car : MonoBehaviour {
 	public WheelCollider[] steeringWheels;
 	public WheelCollider[] staticWheels;
 	public float brakeTorque = 5000f;
-	public float handbrakeTorque = 10000f;
 	public float maxSteerSpeed = 5f;
 	public float maxSteerAngle = 30;
+	public Vector3 stabilizingDrag = new Vector3(0.5f, 1f, 0f);
+	public ParticleSystem boostFlame;
+	public float boostForce = 200f;
 	public GameObject[] lights;
 	bool lightsOn = false;
 
@@ -64,7 +66,7 @@ public class Car : MonoBehaviour {
 
 	void Update () {
 		
-		if (Vector3.Dot(UnityEngine.RenderSettings.sun.transform.forward, transform.position.normalized) > 0f) {
+		if (Vector3.Dot(UnityEngine.RenderSettings.sun.transform.forward, transform.position.normalized) > -0.1f) {
 			lightsOn = true;
 		} else {
 			lightsOn = false;
@@ -73,15 +75,34 @@ public class Car : MonoBehaviour {
 		foreach (GameObject o in lights) {
 			o.GetComponent<Light>().intensity = Mathf.Lerp(o.GetComponent<Light>().intensity, lightsOn?3f:0f, 0.1f);
 		}
+
+		if (boostPos) {
+			if (!boostFlame.isPlaying) boostFlame.Play();
+		} else
+			boostFlame.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+
+		for (int i = 0; i < boostFlame.transform.childCount; i++) {
+			boostFlame.transform.GetChild(i).gameObject.SetActive(boostPos);
+		}
 	
 	}
 
 	void FixedUpdate () {
 
+		//Aerodynamic stabilization approximation
+		Vector3 dragDir = transform.InverseTransformDirection(RB.velocity);
+		float sqrVel = Mathf.Pow(Vector3.Dot(RB.velocity, transform.forward), 2);
+		Vector3 stabilizationForces = -Vector3.Scale(dragDir, stabilizingDrag) * sqrVel;
+		RB.AddRelativeTorque(stabilizationForces.y, -stabilizationForces.x, 0f, ForceMode.Acceleration);
+		
 		// Makes sure input values are within acceptable ranges.
 		steerTarget = Mathf.Clamp(steerTarget, -1f, 1f);
 		throttlePos = Mathf.Clamp(throttlePos, -1f, 1f);
 		brakePos = Mathf.Clamp01(brakePos);
+
+		// Toggle boost thrust
+		if (boostPos)
+			RB.AddRelativeForce(0f, 0f, boostForce * Time.fixedDeltaTime, ForceMode.Acceleration);
 
 		// Calculates vehicle speed.  This is useful for a spedometer or to tell Driver.cs how to behave.
 		speed = Vector3.Dot(RB.velocity, transform.forward);
@@ -107,10 +128,6 @@ public class Car : MonoBehaviour {
 			// Applies normal analog brakes if appropriate.  This is like the brake pedal on a normal car.
 			wheel.brakeTorque = Mathf.Lerp(0f, brakeTorque, brakePos);
 
-			// Applies the handbrake if appropriate
-			if (handbrakePos)
-				wheel.brakeTorque = handbrakeTorque;
-
 			// Applies engine torque depending on throttle
 			float torque = Mathf.Sign(throttlePos);
 			torque *= maxTorque * Mathf.Lerp(
@@ -130,12 +147,6 @@ public class Car : MonoBehaviour {
 
 			// Applies normal analog brakes if appropriate.  This is like the brake pedal on a normal car.
 			//wheel.brakeTorque = Mathf.Lerp(0f, brakeTorque, brakePos);
-
-			// Applies the handbrake if appropriate
-			if (handbrakePos)
-				wheel.brakeTorque = handbrakeTorque;
-			else
-				wheel.brakeTorque = 0f;
 
 			// If using 4-wheel drive, the back wheels need torque as well
 			if (allWheelDrive) {

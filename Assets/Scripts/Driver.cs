@@ -8,7 +8,7 @@ public class Driver : MonoBehaviour {
 	public bool allowInput = true;
 	public float throttle;
 	public float steering;
-	public bool handbrake;
+	public bool boost;
 
 	public float brakesCutoffVelocity = 3f;
 
@@ -20,14 +20,14 @@ public class Driver : MonoBehaviour {
 	void FixedUpdate () {
 		// Allows for easy debugging/testing
 		if (allowInput) {
-			steering = Input.GetAxis("Horizontal");
-			throttle = Input.GetAxis("Vertical");
-			handbrake = Input.GetButton("Handbrake");
+			steering = Input.GetAxis("Steer");
+			throttle = Input.GetAxis("Throttle");
+			boost = Input.GetButton("Boost");
 		}
 
 		// Same behavior regardless of motion
 		car.steerTarget = steering;
-		car.handbrakePos = handbrake;
+		car.boostPos = boost;
 		
 		// Behavior changes depending on car speed
 		if (car.speed > brakesCutoffVelocity) {
