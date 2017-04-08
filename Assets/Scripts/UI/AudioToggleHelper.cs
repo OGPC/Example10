@@ -14,7 +14,7 @@ public class AudioToggleHelper : MonoBehaviour {
 	public Color offColor;
 	Color onColor;
 
-	void Start () {
+	void Awake () {
 		onColor = background.color;
 
 		float loadedVal = PlayerPrefs.GetFloat("audio"+controlledParam, 0f);

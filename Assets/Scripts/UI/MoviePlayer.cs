@@ -8,8 +8,10 @@ public struct cutScene {
 	public GameObject go;
 	public bool closeAfter;
 	public UnityEvent endAction;
+	public AudioClip audio;
 }
 
+[RequireComponent(typeof(AudioSource))]
 public class MoviePlayer : MonoBehaviour {
 	
 	public bool playingMovie = false;
@@ -17,6 +19,11 @@ public class MoviePlayer : MonoBehaviour {
 	public GameObject videoParent;
 	public cutScene[] movTexture;
 	private int vsyncprevious;
+	AudioSource AS;
+
+	void Start () {
+		AS = GetComponent<AudioSource>();
+	}
 
 	void Update () {
 		if (playingMovie) {
@@ -41,7 +48,12 @@ public class MoviePlayer : MonoBehaviour {
 		movTexture[movieSelected].tex.Play();
 		movTexture[movieSelected].go.SetActive(true);
 		videoParent.SetActive(true);
-		playingMovie = true;
+		if (movTexture[movieSelected].audio != null) {
+			playingMovie = true;
+			AS.outputAudioMixerGroup = null;
+			AS.clip = movTexture[movieSelected].audio;
+			AS.PlayDelayed(7f);
+		}
 	}
 
 	public void StopMovie (int index = -1) {

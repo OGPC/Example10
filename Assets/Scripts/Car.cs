@@ -1,13 +1,10 @@
 ﻿using UnityEngine;
 
-[RequireComponent (typeof (Rigidbody))]
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(AudioSource))]
 public class Car : MonoBehaviour {
 
 	public float gravity = 20f;
-
-	public float positionSaveDelay = 5f;
-	float positionSaveTimer;
-	Vector3[] savedPosition = {Vector3.zero, Vector3.zero};
 	
 	public float throttlePos = 0f;
 	public float brakePos = 0f;
@@ -33,17 +30,24 @@ public class Car : MonoBehaviour {
 	public float boostForce = 200f;
 	public GameObject[] lights;
 	bool lightsOn = false;
+	public AudioClip[] narr; // Contains all narrations alphabetically. Look in the file explorer for the list.
+	bool watchingPickup;
+	public bool watchingFlip;
+	bool doneNarrating;
+	bool gaveMinuteWarn;
+	public int flipCount;
+	public float timeSinceFlip = 100f;
+	public bool boostAvailable = false;
 
 	[HideInInspector] public Rigidbody RB;
+	[HideInInspector] public AudioSource AS;
 	[HideInInspector] public float speed;
 
 	void Start () {
-		positionSaveTimer = 0f;
-		savedPosition[0] = transform.position;
-		savedPosition[1] = transform.position;
 
-		// This is safe without checking for success because of line 3.
+		// This is safe without checking for success because of lines 3 and 4.
 		RB = GetComponent<Rigidbody>();
+		AS = GetComponent<AudioSource>();
 
 		// Sets variables to good values.  This part is mostly optional.
 		steerTarget = Mathf.Clamp(steerTarget, -1f, 1f);
@@ -62,6 +66,9 @@ public class Car : MonoBehaviour {
 			wheel.brakeTorque = 0f;
 			wheel.ConfigureVehicleSubsteps(5f, 12, 15);
 		}
+
+		AS.clip = narr[14];
+		AS.PlayDelayed(3);
 	}
 
 	void Update () {
@@ -76,15 +83,38 @@ public class Car : MonoBehaviour {
 			o.GetComponent<Light>().intensity = Mathf.Lerp(o.GetComponent<Light>().intensity, lightsOn?3f:0f, 0.1f);
 		}
 
-		if (boostPos) {
+		if (boostPos && boostAvailable) {
 			if (!boostFlame.isPlaying) boostFlame.Play();
 		} else
 			boostFlame.Stop(false, ParticleSystemStopBehavior.StopEmitting);
 
 		for (int i = 0; i < boostFlame.transform.childCount; i++) {
-			boostFlame.transform.GetChild(i).gameObject.SetActive(boostPos);
+			boostFlame.transform.GetChild(i).gameObject.SetActive(boostPos && boostAvailable);
 		}
-	
+
+		timeSinceFlip += Time.deltaTime;
+
+		if (!doneNarrating && !AS.isPlaying && Time.timeSinceLevelLoad >= 25f) {
+			AS.clip = narr[15];
+			AS.Play();
+
+			doneNarrating = true;
+		} else if (!watchingPickup && doneNarrating && !AS.isPlaying) {
+			watchingPickup = true;
+			watchingFlip = true;
+		}
+
+		if (!boostAvailable && !AS.isPlaying && Time.timeSinceLevelLoad >= 120f) {
+			boostAvailable = true;
+			AS.clip = narr[0];
+			AS.Play();
+		}
+
+		if (!gaveMinuteWarn && !AS.isPlaying && Time.timeSinceLevelLoad >= 240f) {
+			gaveMinuteWarn = true;
+			AS.clip = narr[7];
+			AS.Play();
+		}
 	}
 
 	void FixedUpdate () {
@@ -99,6 +129,8 @@ public class Car : MonoBehaviour {
 		steerTarget = Mathf.Clamp(steerTarget, -1f, 1f);
 		throttlePos = Mathf.Clamp(throttlePos, -1f, 1f);
 		brakePos = Mathf.Clamp01(brakePos);
+
+		boostPos = boostPos && boostAvailable;
 
 		// Toggle boost thrust
 		if (boostPos)
@@ -184,6 +216,24 @@ public class Car : MonoBehaviour {
 		model.Rotate(0f, 0f, wheel.rpm / 6f, Space.Self);
 	}
 
+	public void GotPickup (int numLeft) {
+		if (watchingPickup && !AS.isPlaying) {
+			switch (numLeft) {
+				case 5:
+					AS.clip = narr[11];
+					break;
+				case 0:
+					AS.clip = narr[12];
+					break;
+				default:
+					AS.clip = narr[8 + ((numLeft-1) % 3)];
+					break;
+			}
+
+			AS.Play();
+		}
+	}
+
 	void ControlParticles (WheelCollider wheel, ParticleSystem particles) {
 		if (wheel.isGrounded && Mathf.Abs(speed) > 5f) {
 			particles.Play();
@@ -192,39 +242,23 @@ public class Car : MonoBehaviour {
 	}
 
 	void UnFlip () {
-		RB.velocity = transform.position.normalized * 10f;
-		RB.angularVelocity = transform.forward * 3f;
-	}
+		if (watchingFlip && !AS.isPlaying && timeSinceFlip > 5f) {
+			flipCount++;
 
-	void OnTriggerEnter (Collider coll) {
-		if (coll.tag == "Respawn") {
-			Respawn();
-		}
-	}
-
-	void OnTriggerStay (Collider coll) {
-		if (coll.tag == "Ground") {
-			positionSaveTimer -= Time.fixedDeltaTime;
-			if (positionSaveTimer < 0f) {
-				positionSaveTimer = positionSaveDelay;
-				savedPosition[1] = savedPosition[0];
-				savedPosition[0] = transform.position;
+			if (flipCount <= 4) {
+				AS.clip = narr[2+flipCount];
+				AS.Play();
+			} else {
+				if (Random.value > 0.5f) {
+					AS.clip = narr[Mathf.RoundToInt(Random.Range(1f,2.95f))];
+					AS.Play();
+				}
 			}
 		}
-	}
 
-	public void Respawn() {
-		if (positionSaveTimer > positionSaveDelay) { // If you respawned recently already
-			positionSaveTimer = positionSaveDelay * 2f;
-			transform.position = savedPosition[1] + (savedPosition[1].normalized * 2f);
-			transform.LookAt(-(savedPosition[0]-savedPosition[1]), savedPosition[1].normalized);
-		} else {
-			positionSaveTimer = positionSaveDelay * 2f;
-			transform.position = savedPosition[0] + (savedPosition[0].normalized * 2f);
-			transform.LookAt(savedPosition[1], savedPosition[0].normalized);
-		}
+		timeSinceFlip = 0f;
 
-		RB.velocity = Vector3.zero;
-		RB.angularVelocity = Vector3.zero;
+		RB.velocity = transform.position.normalized * 10f;
+		RB.angularVelocity = transform.forward * 4f;
 	}
 }

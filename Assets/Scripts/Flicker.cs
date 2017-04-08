@@ -14,6 +14,9 @@ public class Flicker : MonoBehaviour {
 	}
 	
 	void Update () {
-		lightEmitter.intensity = Random.Range(min, max);
+		if (Time.timeScale != 0f)
+			lightEmitter.intensity = Random.Range(min, max);
+		else
+			lightEmitter.intensity = max;
 	}
 }

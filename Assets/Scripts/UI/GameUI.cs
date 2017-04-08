@@ -17,9 +17,6 @@ public class GameUI : MonoBehaviour {
 		string speedometerText = Mathf.Round(Mathf.Abs(car.speed)).ToString();
 		speedometer.text = speedometerText;
 
-		if (Input.GetKeyDown(KeyCode.Escape))
-			SceneManager.LoadScene(0);
-
 		float timeRemaining = Mathf.Floor(gameManager.timeRemaining);
 		float seconds = timeRemaining % 60f;
 		float minutes = Mathf.Floor(timeRemaining / 60f);

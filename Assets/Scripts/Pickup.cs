@@ -16,32 +16,37 @@ public class Pickup : MonoBehaviour {
 
 	void Start () {
 		AS = GetComponent<AudioSource>();
-		initScale = transform.GetChild(0).localScale;
-		pointLight = transform.GetChild(0).GetChild(0).GetComponent<Light>();
+		initScale = transform.GetChild(2).localScale;
+		pointLight = transform.GetChild(1).GetComponent<Light>();
 		initLum = pointLight.intensity;
 	}
 
 	void OnTriggerEnter (Collider other) {
-		if (!pickedUp && other.tag == "Player") {
-			AS.PlayOneShot(AS.clip);
-			pickedUp = true;
-			if (manager != null)
-				manager.GetPickup(this.gameObject);
-			else
-				Debug.LogWarning(name + " was not properly initialized!");
-			Destroy(transform.GetChild(1).gameObject);	// Beacon
-
+		if (other.tag == "Player") {
+			PickUp();
 		}
 	}
 
-	void FixedUpdate() {
+	void FixedUpdate( ) {
 		if (pickedUp) {
-			transform.GetChild(0).localScale = initScale * scaleAnim.Evaluate(animTime);
+			transform.GetChild(1).localScale = initScale * scaleAnim.Evaluate(animTime);
 			animTime += Time.fixedDeltaTime/animationLength;
 			pointLight.intensity = initLum * (1f - animTime);
 		}
 
 		if (animTime > 1f && !AS.isPlaying)
 			Destroy(this.gameObject);
+	}
+
+	public void PickUp () {
+		if (pickedUp) return;
+
+		AS.PlayOneShot(AS.clip);
+		pickedUp = true;
+		if (manager != null)
+			manager.GetPickup(this.gameObject);
+		else
+			Debug.LogWarning(name + " was not properly initialized!");
+		Destroy(transform.GetChild(0).gameObject);	// Beacon
 	}
 }

@@ -53,8 +53,5 @@ public class Driver : MonoBehaviour {
 			car.throttlePos = throttle;
 			car.brakePos = 0f;
 		}
-
-		if (Input.GetKeyUp(KeyCode.Escape))
-			SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 	}
 }
